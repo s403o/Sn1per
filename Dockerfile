@@ -33,7 +33,12 @@ COPY . /usr/src/app/Sn1per
 
 # -y skips the installer's interactive confirmation prompt, which
 # otherwise hangs a non-interactive Docker build.
-RUN ./install.sh -y \
-    && sniper -u force
+#
+# `sniper -u force` was dropped: -u ignores the force argument and prompts
+# via `read ans` whenever upstream is ahead of the built version, so it would
+# hang the build as soon as a new tag lands. Answering it would also re-clone
+# upstream and re-run the interactive installer. `--help` smoke-tests the
+# install instead.
+RUN ./install.sh -y && sniper --help >/dev/null
 
 CMD ["sniper"]
