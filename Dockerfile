@@ -11,7 +11,7 @@ LABEL org.label-schema.name='Sn1per - Kali Linux' \
 
 RUN echo "deb http://http.kali.org/kali kali-rolling main contrib non-free" > /etc/apt/sources.list && \
     echo "deb-src http://http.kali.org/kali kali-rolling main contrib non-free" >> /etc/apt/sources.list
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN set -x \
         && apt -yqq update \
@@ -23,12 +23,17 @@ RUN sed -i 's/systemctl status ${PG_SERVICE}/service ${PG_SERVICE} status/g' /us
     service postgresql start && \
     msfdb reinit
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src/app/Sn1per
 
 RUN apt --yes install git bash
-RUN git clone https://github.com/1N3/Sn1per.git \
-    && cd Sn1per \
-    && ./install.sh \
+
+# Build the checked-out tree so CI validates the commit under test,
+# instead of re-cloning the upstream default branch.
+COPY . /usr/src/app/Sn1per
+
+# -y skips the installer's interactive confirmation prompt, which
+# otherwise hangs a non-interactive Docker build.
+RUN ./install.sh -y \
     && sniper -u force
 
 CMD ["sniper"]
